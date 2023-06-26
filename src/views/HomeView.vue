@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import { useRouter } from "vue-router";
+
+const router = useRouter()
+router.push({ name: "thesis-management"})
 </script>
 
 <template>
   <main>
-    <TheWelcome />
+    Homepage
   </main>
 </template>

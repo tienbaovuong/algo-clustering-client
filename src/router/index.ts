@@ -10,13 +10,45 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue')
-    }
+      path: '/thesis-data',
+      name: 'thesis-management',
+      meta: {
+        description: 'THESIS LIST'
+      },
+      component: () => import('@/views/thesis_data/ThesisManagement.vue')
+    },
+    {
+      path: '/thesis-data/:id',
+      name: 'thesis-detail',
+      meta: {
+        description: 'THESIS DETAIL'
+      },
+      component: () => import('@/views/thesis_data/ThesisDetail.vue')
+    },
+    {
+      path: '/clustering',
+      name: 'clustering',
+      meta: {
+        description: 'CLUSTERING'
+      },
+      component: () => import('@/views/clustering/ClusteringInit.vue')
+    },
+    {
+      path: '/history',
+      name: 'cluster-history-management',
+      meta: {
+        description: 'HISTORY LIST'
+      },
+      component: () => import('@/views/cluster_history/HistoryManagement.vue')
+    },
+    {
+      path: '/history/:id',
+      name: 'cluster-history-detail',
+      meta: {
+        description: 'HISTORY DETAIL'
+      },
+      component: () => import('@/views/cluster_history/HistoryDetail.vue')
+    },
   ]
 })
 

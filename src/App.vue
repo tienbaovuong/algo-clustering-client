@@ -12,7 +12,6 @@ const rail = ref(true);
       app
       color="blue-darken-4"
       dark
-      image="vit-header-img.svg"
     >
       <v-col cols="8" style="min-width: 411px">
         <div class="d-flex align-center">
@@ -66,13 +65,37 @@ const rail = ref(true);
 
       <v-list density="compact" nav>
         <v-list-item
-          prepend-icon="mdi-home"
+          prepend-icon="mdi-bookshelf"
           class="d-flex pl-2"
-          title="Home"
-          value="home"
+          title="Thesis"
+          value="thesis"
           exact
           link
-          :to="{ name: 'home' }"
+          :to="{ name: 'thesis-management' }"
+        >
+        </v-list-item>
+      </v-list>
+      <v-list density="compact" nav>
+        <v-list-item
+          prepend-icon="mdi-history"
+          class="d-flex pl-2"
+          title="History"
+          value="history"
+          exact
+          link
+          :to="{ name: 'cluster-history-management' }"
+        >
+        </v-list-item>
+      </v-list>
+      <v-list density="compact" nav>
+        <v-list-item
+          prepend-icon="mdi-robot-outline"
+          class="d-flex pl-2"
+          title="Clustering"
+          value="clustering"
+          exact
+          link
+          :to="{ name: 'clustering' }"
         >
         </v-list-item>
       </v-list>
