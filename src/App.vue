@@ -42,23 +42,28 @@ const rail = ref(true);
       :rail="rail"
       permanent
       id="side-menu"
-      class="side-menu spider-bgr"
+      class="side-menu"
       @click="rail = false"
     >
-      <div id="side-menu-bgr" class="side-menu-bgr"></div>
       <v-list-item
-        class="user-info"
-        prepend-avatar="/default-avatar.png"
-        :title="'BAO.VT193991@sis.hust.edu.vn'"
+        class="user-info pl-1"
         nav
       >
         <template v-slot:append>
           <v-btn
+            v-if="rail"
+            variant="text"
+            icon="mdi-menu"
+            @click.stop="rail = !rail"
+          ></v-btn>
+          <v-btn
+            v-else
             variant="text"
             icon="mdi-chevron-left"
             @click.stop="rail = !rail"
           ></v-btn>
         </template>
+        <span class="text-h5 ml-3">Navigation</span>
       </v-list-item>
 
       <v-divider></v-divider>
@@ -112,13 +117,5 @@ const rail = ref(true);
 }
 .side-menu:not(.v-navigation-drawer--rail) .user-info div.v-list-item-title {
   white-space: initial;
-}
-
-.side-menu-bgr {
-  z-index: -1;
-  position: absolute;
-  top: 56px;
-  height: calc(100vh - 120px);
-  width: 100%;
 }
 </style>

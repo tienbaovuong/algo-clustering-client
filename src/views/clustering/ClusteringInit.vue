@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios, { BASE_URL } from "@/plugins/axios";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import type { VDataTableServer } from "vuetify/labs/components";
 import draggable from "vuedraggable";
@@ -134,6 +134,10 @@ const onCluster = async () => {
     router.push({ name: "cluster-history-detail", params: {id : resp.data.data._id}})
   }
 }
+// computer
+const disableStart = computed(() => {
+    return (numCluster.value * sizeCluster.value < totalItem.value) || totalItem.value === 0
+})
 
 </script>
 
@@ -173,12 +177,13 @@ const onCluster = async () => {
                 <v-text-field
                     v-model="sizeCluster"
                     type="number"
+                    v-bind:rules="[(value) => (value * numCluster >= totalItem) || 'Max size must be higher than Current Total / Cluster Number.']"
                 >
                 </v-text-field>
             </v-col>
         </v-row>
         <v-row>
-            <v-col cols="4"><span class="text-h5">Filter thesis to cluster</span></v-col>
+            <v-col cols="4"><span class="text-h5">Filter thesis to cluster (Current total: {{ totalItem }})</span></v-col>
         </v-row>
         <v-row>
             <v-col class="d-flex">
@@ -252,6 +257,7 @@ const onCluster = async () => {
             @click="historyDialog = true"
             color="blue-darken-3"
             elevation="2"
+            :disabled="disableStart"
         >Start</v-btn>
     </div>
     <v-dialog

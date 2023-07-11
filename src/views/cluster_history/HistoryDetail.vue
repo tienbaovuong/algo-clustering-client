@@ -6,7 +6,9 @@ import { ref, onBeforeMount, onUnmounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import draggable from "vuedraggable";
 import { isEqual, cloneDeep } from "lodash";
+import { useToast, POSITION } from "vue-toastification";
 
+const toast = useToast()
 const route = useRoute()
 const interval = ref(null as any)
 const emptyArray: any[] = [];
@@ -15,11 +17,13 @@ const emptyArray: any[] = [];
 const historyFinishMode = ref(false);
 const originalHistoryData = ref(null as any);
 const historyData = ref(null as any);
+const historyName = ref("");
+const historyDescription = ref("");
 const historyStatus = ref("");
 const nlp_done = ref(0);
 const nlp_total = ref(1);
 
-const getHistoryData = async() => {
+const getHistoryData = async(update_all_mode = true) => {
     const id = route.params.id
     const resp = await axios.get(
         `${BASE_URL}/api/v1/cluster_history/${id}`,
@@ -30,6 +34,10 @@ const getHistoryData = async() => {
     if (resp.data.error_code === 0) {
         originalHistoryData.value = resp.data.data
         historyData.value = cloneDeep(resp.data.data)
+        if (update_all_mode) {
+            historyName.value = resp.data.data.name
+            historyDescription.value = resp.data.data.description
+        }
         historyStatus.value = resp.data.data.cluster_job_status.status
         nlp_done.value = resp.data.data.cluster_job_status.total_done_nlp
         nlp_total.value = resp.data.data.cluster_job_status.total_thesis
@@ -41,6 +49,12 @@ const getHistoryData = async() => {
         else if (status === "FAILED") {
             historyFinishMode.value = false
             clearInterval(interval.value)
+            toast.error("Clustering failed", {
+                position: POSITION.TOP_CENTER,
+                timeout: 2000,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
         }
         else {
             historyFinishMode.value = false
@@ -50,8 +64,8 @@ const getHistoryData = async() => {
 const onUpdate = async () => {
     const id = route.params.id
     const body = {
-        name: historyData.value.name,
-        description: historyData.value.description,
+        name: historyName.value,
+        description: historyDescription.value,
         clusters: historyData.value.clusters
     }
     const resp = await axios.put(
@@ -63,6 +77,20 @@ const onUpdate = async () => {
     );
     if (resp.data.error_code === 0) {
         await getHistoryData()
+        toast.success("History updated", {
+            position: POSITION.TOP_CENTER,
+            timeout: 2000,
+            closeOnClick: true,
+            pauseOnHover: true,
+        })
+    }
+    else {
+        toast.error("Something wrong happend", {
+            position: POSITION.TOP_CENTER,
+            timeout: 3000,
+            closeOnClick: true,
+            pauseOnHover: true,
+        })
     }
 }
 const clusterIndex = ref(0);
@@ -103,7 +131,7 @@ const onGetSuggestion = async () => {
 // before mounted
 onBeforeMount(async () => {
     interval.value = setInterval( async() => {
-        await getHistoryData();
+        await getHistoryData(false);
     }, 2000)
     await getHistoryData();
 });
@@ -113,7 +141,10 @@ onUnmounted(() => {
 });
 // computer
 const disableUpdate = computed(() => {
-    return isEqual(historyData.value, originalHistoryData.value) || historyData.value.name === ""
+    return (isEqual(historyData.value, originalHistoryData.value) 
+            && originalHistoryData.value.name === historyName.value
+            && originalHistoryData.value.description === historyDescription.value) 
+            || historyName.value === ""
 })
 const colorProgress = computed(() => {
     if (historyStatus.value === "FINISHED") {
@@ -148,7 +179,7 @@ const valueProgress = computed(() => {
                 <v-col>
                     <span class="text-h6">Name</span>
                     <v-text-field
-                        v-model="historyData.name"
+                        v-model="historyName"
                         placeholder="Enter name for the result"
                         v-bind:rules="[(value) => !!value || 'A name is required.']"
                     ></v-text-field>
@@ -156,7 +187,7 @@ const valueProgress = computed(() => {
                 <v-col>
                     <span class="text-h6">Description</span>
                     <v-text-field
-                        v-model="historyData.description"
+                        v-model="historyDescription"
                         placeholder="Enter description for the results"
                         hide-details
                     />
