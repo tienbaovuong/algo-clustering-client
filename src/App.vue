@@ -105,7 +105,7 @@ const rail = ref(true);
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <v-main style="min-height: 250px; min-width: 800px">
+    <v-main style="min-height: 250px; min-width: 800px; background-color: white;">
       <RouterView />
     </v-main>
   </v-layout>
