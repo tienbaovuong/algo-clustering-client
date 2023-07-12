@@ -7,13 +7,37 @@ import { useRoute } from "vue-router";
 import draggable from "vuedraggable";
 import { isEqual, cloneDeep } from "lodash";
 import { useToast, POSITION } from "vue-toastification";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+import { Line } from "vue-chartjs"
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 const toast = useToast()
 const route = useRoute()
 const interval = ref(null as any)
 const emptyArray: any[] = [];
+const chartData = ref({} as any);
 
 // Data ref
+const open = ref([...emptyArray]);
+const choosenLoop = ref(0);
 const historyFinishMode = ref(false);
 const originalHistoryData = ref(null as any);
 const historyData = ref(null as any);
@@ -42,9 +66,30 @@ const getHistoryData = async(update_all_mode = true) => {
         nlp_done.value = resp.data.data.cluster_job_status.total_done_nlp
         nlp_total.value = resp.data.data.cluster_job_status.total_thesis
         const status = resp.data.data.cluster_job_status.status
-        if (status === "FINISHED") {
+        if (status === "FINISHED" || status === "CLUSTERING") {
             historyFinishMode.value = true
-            clearInterval(interval.value)
+            if (status === "FINISHED") {
+                clearInterval(interval.value)
+                if (choosenLoop.value == 0) {
+                    choosenLoop.value = resp.data.data.clusters.length
+                }
+            }
+            else {
+                choosenLoop.value = resp.data.data.clusters.length
+            }
+            if (choosenLoop.value > 0){
+                open.value = [...Array(resp.data.data.clusters[choosenLoop.value - 1].result_cluster.length).keys()]
+            }
+            chartData.value = {
+                labels: loopOptions.value,
+                datasets: [
+                    {
+                        label: 'Loss Values',
+                        backgroundColor: 'black',
+                        data: historyData.value.loss_values
+                    }
+                ]
+            }
         }
         else if (status === "FAILED") {
             historyFinishMode.value = false
@@ -128,6 +173,9 @@ const onGetSuggestion = async () => {
         clusterSuggestion.value = resp.data.data
     }
 }
+const collapseAll = () => {
+    open.value = [...emptyArray];
+}
 // before mounted
 onBeforeMount(async () => {
     interval.value = setInterval( async() => {
@@ -170,10 +218,14 @@ const valueProgress = computed(() => {
     }
     return 10 + 100 * nlp_done.value / nlp_total.value;
 })
+const loopOptions = computed(() => {
+    let opts = Array.from({length: historyData.value.clusters.length}, (_, i) => i + 1)
+    return opts
+})
 </script>
 
 <template>
-    <div v-if="historyData" style="width: 100%; min-height: 850px; padding:20px;">
+    <div v-if="historyData" style="width: 100%; min-height: 850px; padding:20px; ">
         <v-container fluid>
             <v-row>
                 <v-col>
@@ -201,6 +253,7 @@ const valueProgress = computed(() => {
                     <span class="text-h6">Status: </span>&nbsp; &nbsp;
                     <span class="text-h6" :style="{color: HISTORY_STATUSES[historyData.cluster_job_status.status] }">{{ historyData.cluster_job_status.status }}</span>
                     <span v-if="historyStatus==='WAITING NLP'" class="text-h6" :style="{color: 'orange'}">({{ nlp_done }}/{{ nlp_total }})</span>
+                    <span v-if="historyStatus==='CLUSTERING'" class="text-h6" :style="{color: 'orange'}">(Loop {{ historyData.clusters.length }})</span>
                 </v-col>
                 <v-col v-if="historyStatus !== 'FAILED'" cols="9" class="d-flex justify-center align-center">
                     <v-progress-linear
@@ -213,43 +266,79 @@ const valueProgress = computed(() => {
             </v-row>
             <v-row><v-col><v-divider/></v-col></v-row>
             <v-row>
-                <v-col v-if="historyStatus==='FINISHED'">
-                    <span class="text-h6">CLUSTER RESULT </span>
-                    <span>(Drag and drop the card to change their cluster)</span>
-                    <p class="text-h6">Total number of cluster: {{ historyData.clusters.length }}</p>
+                <v-col v-if="historyStatus==='FINISHED' || historyStatus==='CLUSTERING'">
+                    <div class="d-flex justify-space-between">
+                        <div class="align-center">
+                            <span class="text-h6">CLUSTER RESULT </span>
+                            <span>(Drag and drop the card to change their cluster)</span>
+                        </div>
+                        <div class="d-flex align-center">
+                            <span class="text-h6 mr-10">Loop No</span>
+                            <v-select v-model="choosenLoop" :items="loopOptions" hide-details></v-select>
+                        </div>
+                    </div>
+                    <v-list>
+                        <v-list-group value="Loss value">
+                            <template v-slot:activator="{ props }">
+                                <v-list-item
+                                    v-bind="props"
+                                    prepend-icon="mdi-eye-outline"
+                                    title="Show loss values"
+                                ></v-list-item>
+                            </template>
+                            <div class="d-flex justify-center" style="height: 500px;">
+                                <Line :data="chartData" />
+                            </div>
+                        </v-list-group>
+                    </v-list>
+                    <div class="mb-5">
+                        <span class="text-h6">Number of loops: {{ historyData.clusters.length }}</span>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <span class="text-h6">Total number of cluster: {{ historyData.clusters[choosenLoop-1].result_cluster.length }}</span>
+                        <v-btn class="ml-4" color="blue-darken-3" @click.stop="collapseAll">Collapse All</v-btn>
+                    </div>
                 </v-col>
                 <v-col v-else>
                     <span class="text-h6">INPUT THESIS</span>
                 </v-col>
             </v-row>
-            <v-row v-if="historyStatus==='FINISHED'">
-                <v-col 
-                    class="pa-1"
-                    v-for="(item, index) in historyData.clusters"
-                    :key="index"
-                    cols="12"
-                    sm="2"
-                    on
-                >
-                    <div style="border: 1px solid orange; border-radius: 10px;" class="pa-3">
-                        <div class="d-flex justify-space-between">
-                            <span class="text-h6" style="max-width: 223px;">{{ item.name }}</span>
-                            <v-icon @click.stop="onEditCluster(index)">mdi-pencil</v-icon>
+            <v-row v-if="historyStatus==='FINISHED' || historyStatus==='CLUSTERING'">
+                <v-list v-model:opened="open" v-if="choosenLoop > 0">
+                    <v-list-group 
+                        class="pa-1 cluster_group_box mb-3"
+                        v-for="(item, index) in historyData.clusters[choosenLoop-1].result_cluster"
+                        :key="index"
+                        :value="index"
+                        on
+                    >
+                        <template v-slot:activator="{ props }">
+                            <div class="d-flex" >
+                                <v-icon class="ml-3 mt-3" @click.stop="onEditCluster(index)">mdi-pencil</v-icon>
+                                <v-list-item
+                                    v-bind="props"
+                                    :title="item.name"
+                                    style="width: calc(100% - 40px);"
+                                ></v-list-item>
+                            </div>
+                        </template>
+                        <v-divider />
+                        <div class="pa-3">
+                            <draggable
+                                class="list-group d-flex"
+                                :list="item.children"
+                                group="thesis"
+                                item-key="thesis_id"
+                            >
+                                <template #item="{ element }">
+                                    <div class="list-group-item pr-2">
+                                        <mini-thesis-card :data="historyData.non_clustered_thesis[element]" :hover_mode="false"></mini-thesis-card>
+                                    </div>
+                                </template>
+                            </draggable>
                         </div>
-                        <draggable
-                            class="list-group mt-3"
-                            :list="item.children"
-                            group="thesis"
-                            item-key="thesis_id"
-                        >
-                            <template #item="{ element }">
-                                <div class="list-group-item pb-2">
-                                    <mini-thesis-card :data="element" :hover_mode="false"></mini-thesis-card>
-                                </div>
-                            </template>
-                        </draggable>
-                    </div>
-                </v-col>
+                    </v-list-group>
+                </v-list>
             </v-row>
             <v-row v-else>
                 <v-col
@@ -309,3 +398,17 @@ const valueProgress = computed(() => {
         </v-dialog>
     </div>
 </template>
+
+<style scoped>
+.cluster_group_box {
+    border: 1px solid orange; 
+    border-radius: 10px; 
+    overflow-x: auto;
+}
+.cluster_group_box ::-webkit-scrollbar {
+    height: 2px;
+}
+.edit_cluster_icon {
+    position: relative;
+}
+</style>

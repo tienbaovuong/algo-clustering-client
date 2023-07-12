@@ -22,7 +22,8 @@ const thesisLink = (id: String) => {
                 <v-card
                     :class="hover_mode? 'hoverColor': ''"
                     v-bind="props"
-                    min-height="110px" 
+                    height="150px"
+                    :width="hover_mode? '' : '200px'" 
                     style="border-radius: 20px; border: 1px solid green;">
                     <v-card-title>{{ data.student_name }}
                     </v-card-title>
@@ -58,6 +59,6 @@ const thesisLink = (id: String) => {
 </template>
 <style scoped>
 .hoverColor:hover{
-    background-color: rgb(94, 94, 243);
+    background-color: #1565C0;
 }
 </style>
