@@ -2,6 +2,7 @@
 import axios, { BASE_URL } from "@/plugins/axios";
 import { ref } from "vue";
 import type { VDataTableServer } from "vuetify/labs/components";
+import UploadThesis from "@/components/thesis/UploadThesis.vue"
 
 interface Thesis {
   _id: string;
@@ -11,6 +12,7 @@ interface Thesis {
   student_id: string;
 }
 const TemplateArray: Thesis[] = [];
+const drawer = ref(false);
 
 // table list related
 const thesisList = ref([...TemplateArray]);
@@ -84,6 +86,11 @@ const onSearch = async () => {
   await getListData({ page: 1, itemsPerPage: itemsPerPage.value });
 };
 
+// upload
+const onUpload = async () => {
+  await getListData({ page: 1, itemsPerPage: itemsPerPage.value });
+}
+
 //delete dialog
 const deleteDialog = ref(false);
 const deleteId = ref("0");
@@ -109,6 +116,7 @@ const onDelete = async () => {
           <v-btn
             color="blue-darken-3"
             elevation="2"
+            @click.stop="drawer = !drawer"
             >Upload
           </v-btn>
         </v-col>
@@ -129,7 +137,7 @@ const onDelete = async () => {
             <v-text-field
               v-model="searchSemester"
               style="max-width: 400px"
-              placeholder="20212 or 20221, etc"
+              placeholder="2022.1 or 2022.2, etc"
             >
             </v-text-field>
             <v-btn
@@ -182,6 +190,16 @@ const onDelete = async () => {
         </v-col>
       </v-row>
     </v-container>
+    <v-navigation-drawer
+      v-model="drawer"
+      location="right"
+      temporary
+      width="800px"
+    >
+      <v-list>
+        <UploadThesis @on-upload="onUpload" />
+      </v-list>
+    </v-navigation-drawer>
     <v-dialog
       v-model="deleteDialog"
       width="auto"

@@ -1,9 +1,33 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { ref } from "vue";
+import { RouterView, useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from "@/stores/auth";
+import { ref, onMounted, computed } from "vue";
 
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 const drawer = ref(true);
 const rail = ref(true);
+
+onMounted(async () => {
+  let token = localStorage.getItem('token')
+  authStore.logIn(token);
+  if (!authStore.isAuthenticated()) {
+    authStore.logOut();
+  }
+});
+
+const logOut = () => {
+  authStore.logOut()
+  router.push({ name: "login"})
+}
+
+const isLoginPage = computed(() => {
+  if(route.name === 'login') {
+    return true
+  }
+  return false
+})
 </script>
 
 <template>
@@ -32,7 +56,7 @@ const rail = ref(true);
 
       <v-spacer></v-spacer>
 
-      <v-btn icon title="Log out">
+      <v-btn icon title="Log out" @click="logOut" v-if="!isLoginPage">
         <v-icon>mdi-logout</v-icon>
       </v-btn>
     </v-app-bar>
@@ -44,6 +68,7 @@ const rail = ref(true);
       id="side-menu"
       class="side-menu"
       @click="rail = false"
+      v-if="!isLoginPage"
     >
       <v-list-item
         class="user-info pl-1"

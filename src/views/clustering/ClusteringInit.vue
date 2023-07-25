@@ -201,7 +201,7 @@ const disableStart = computed(() => {
                 <v-text-field
                 v-model="searchSemester"
                 style="max-width: 400px"
-                placeholder="20212 or 20221, etc"
+                placeholder="2022.1 or 2022.2, etc"
                 >
                 </v-text-field>
                 <v-btn
