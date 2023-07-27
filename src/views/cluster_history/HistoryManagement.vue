@@ -168,9 +168,9 @@ const onDelete = async () => {
                   color="red"
                   icon
                   @click.stop="
-                    deleteDialog = true
-                    deleteId = historyList[index]._id
-                    deleteName = historyList[index].name
+                    deleteDialog = true;
+                    deleteId = historyList[index]._id;
+                    deleteName = historyList[index].name;
                   "
                   ><v-icon>mdi-delete</v-icon></v-btn
                 >

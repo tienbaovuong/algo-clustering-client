@@ -180,9 +180,9 @@ const onDelete = async () => {
                   color="red"
                   icon
                   @click.stop="
-                    deleteDialog = true
-                    deleteId = thesisList[index]._id
-                    deleteName = thesisList[index].title
+                    deleteDialog = true;
+                    deleteId = thesisList[index]._id;
+                    deleteName = thesisList[index].title;
                   "
                   ><v-icon>mdi-delete</v-icon></v-btn
                 >
