@@ -328,7 +328,7 @@ const loopOptions = computed(() => {
           <div class="d-flex mb-3">
             <span class="text-h6"
               >Total number of cluster:
-              {{ historyData.clusters[choosenLoop - 1].result_cluster.length }}</span
+              {{ historyData.clusters[choosenLoop - 1]?.result_cluster.length }}</span
             >
             <v-btn class="ml-4" color="blue-darken-3" @click.stop="collapseAll">Collapse All</v-btn>
           </div>
