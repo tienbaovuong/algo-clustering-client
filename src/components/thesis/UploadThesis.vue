@@ -29,30 +29,38 @@ const errorHeader: Headers = [
 
 //Upload function
 const uploadThesis = async (file: any, index: number) => {
-  let formData = new FormData()
-  formData.append('file', file)
-  const resp = await axios.post(`${BASE_URL}/api/v1/thesis_data/create`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    },
-    withCredentials: true
-  })
+  try {
+    let formData = new FormData()
+    formData.append('file', file)
+    const resp = await axios.post(`${BASE_URL}/api/v1/thesis_data/create`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      withCredentials: true
+    })
 
-  if (resp.data.error_code === 0) {
-    filesUploadStatus.value[index] = UPLOAD_STATUS.DONE
-  } else {
-    filesUploadStatus.value[index] = UPLOAD_STATUS.ERROR
-    if (resp.data.error_code === 1) {
-      errorList.value.push({
-        file_name: file.name,
-        error: 'Duplicated'
-      })
-    } else if (resp.data.error_code === 2) {
-      errorList.value.push({
-        file_name: file.name,
-        error: 'Wrong format/missing data'
-      })
+    if (resp.data.error_code === 0) {
+      filesUploadStatus.value[index] = UPLOAD_STATUS.DONE
+    } else {
+      filesUploadStatus.value[index] = UPLOAD_STATUS.ERROR
+      if (resp.data.error_code === 1) {
+        errorList.value.push({
+          file_name: file.name,
+          error: 'Duplicated'
+        })
+      } else if (resp.data.error_code === 2) {
+        errorList.value.push({
+          file_name: file.name,
+          error: 'Wrong format/missing data'
+        })
+      }
     }
+  } catch {
+    filesUploadStatus.value[index] = UPLOAD_STATUS.ERROR
+    errorList.value.push({
+      file_name: file.name,
+      error: 'Unknown error'
+    })
   }
 }
 
@@ -142,7 +150,12 @@ watch(files, (newFiles) => {
       <v-row v-if="showLog && errorList.length > 0">
         <v-col>
           <h3>Error list</h3>
-          <v-data-table-virtual class="elevation-1" :items="errorList" :headers="errorHeader" height="300"/>
+          <v-data-table-virtual
+            class="elevation-1"
+            :items="errorList"
+            :headers="errorHeader"
+            height="300"
+          />
         </v-col>
       </v-row>
       <v-row>

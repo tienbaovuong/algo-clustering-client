@@ -139,11 +139,11 @@ const clusterEditName = ref('')
 const clusterSuggestion = ref([...emptyArray])
 const onEditCluster = (index: number) => {
   clusterIndex.value = index
-  clusterEditName.value = historyData.value.clusters[index].name
+  clusterEditName.value = historyData.value.clusters[choosenLoop.value - 1].result_cluster[index].name
   clusterEdiDialog.value = true
 }
 const onConfirmEditCluster = () => {
-  historyData.value.clusters[clusterIndex.value].name = clusterEditName.value
+  historyData.value.clusters[choosenLoop.value - 1].result_cluster[clusterIndex.value].name = clusterEditName.value
   onExitEditCluster()
 }
 const onExitEditCluster = () => {
@@ -152,8 +152,8 @@ const onExitEditCluster = () => {
 }
 const onGetSuggestion = async () => {
   const thesisList = [...emptyArray]
-  for (let thesis of historyData.value.clusters[clusterIndex.value].children) {
-    thesisList.push(thesis.thesis_id)
+  for (let thesis of historyData.value.clusters[choosenLoop.value - 1].result_cluster[clusterIndex.value].children) {
+    thesisList.push(historyData.value.non_clustered_thesis[thesis].thesis_id)
   }
   const resp = await axios.post(
     `${BASE_URL}/api/v1/clustering/suggestions`,
